@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Foulées">
+  <meta name="theme-color" content="#185FA5">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <title>Parcours Obstacle</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f2f2f7; min-height: 100vh; }
+    .header { background: #185FA5; color: #fff; padding: 52px 20px 16px; position: sticky; top: 0; z-index: 10; }
+    .header h1 { font-size: 20px; font-weight: 600; }
+    .header p { font-size: 13px; opacity: .75; margin-top: 2px; }
+    .content { padding: 16px; max-width: 500px; margin: 0 auto; }
+    .card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .section-lbl { font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+    .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .type-btn { border: 1.5px solid #d1d1d6; border-radius: 12px; padding: 12px 4px 10px; font-size: 13px; font-weight: 600; background: #f2f2f7; color: #8e8e93; cursor: pointer; text-align: center; transition: all .15s; -webkit-user-select: none; }
+    .icon-wrap { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 26px; margin-bottom: 6px; }
+    .bar { width: 7px; border-radius: 2px; background: #8e8e93; }
+    .type-btn.sel-V { border-color: #5A9FD4; background: #B5D4F4; color: #042C53; }
+    .type-btn.sel-V .bar { background: #042C53; }
+    .type-btn.sel-O { border-color: #5A9F3A; background: #C0DD97; color: #173404; }
+    .type-btn.sel-O .bar { background: #173404; }
+    .type-btn.sel-S { border-color: #D06030; background: #F0997B; color: #4A1B0C; }
+    .type-btn.sel-S .bar { background: #4A1B0C; }
+    .unit-toggle { display: flex; border: 1.5px solid #d1d1d6; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+    .unit-btn { flex: 1; padding: 11px; font-size: 14px; font-weight: 600; background: #f2f2f7; border: none; color: #8e8e93; cursor: pointer; }
+    .unit-btn.sel-u { background: #FFE066; color: #2C2C0A; }
+    .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .dist-row label { font-size: 14px; color: #3a3a3c; flex: 1; }
+    .stepper { display: flex; align-items: center; border: 1.5px solid #d1d1d6; border-radius: 10px; overflow: hidden; height: 42px; }
+    .stepper button { width: 42px; height: 42px; border: none; background: #f2f2f7; font-size: 20px; font-weight: 300; cursor: pointer; color: #185FA5; display: flex; align-items: center; justify-content: center; -webkit-user-select: none; }
+    .stepper button:active { background: #e5e5ea; }
+    .stepper input { width: 70px; height: 42px; border: none; border-left: 1px solid #d1d1d6; border-right: 1px solid #d1d1d6; text-align: center; font-size: 16px; font-weight: 600; color: #1c1c1e; background: #fff; outline: none; -webkit-appearance: none; }
+    .stepper input:focus { background: #fffbe6; }
+    .hint { font-size: 12px; color: #8e8e93; text-align: right; min-height: 18px; }
+    select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #d1d1d6; font-size: 14px; background: #f2f2f7; color: #1c1c1e; -webkit-appearance: none; outline: none; margin-top: 4px; }
+    .alert { border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-top: 10px; }
+    .alert-err { background: #fff0f0; border: 1px solid #ffb3b3; color: #c0392b; }
+    .alert-warn { background: #fffbe6; border: 1px solid #ffe066; color: #7a6000; }
+    .live-card { background: #f2f2f7; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .live-label { font-size: 12px; color: #8e8e93; margin-bottom: 4px; }
+    .live-main { font-size: 26px; font-weight: 700; color: #1c1c1e; }
+    .live-detail { font-size: 12px; color: #8e8e93; margin-top: 4px; }
+    .btn-add { width: 100%; padding: 14px; background: #185FA5; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+    .btn-add:active { opacity: .85; }
+    .btn-end { width: 100%; padding: 14px; background: #fff; color: #c0392b; border: 1.5px solid #c0392b; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .btn-end:active { background: #fff0f0; }
+    .btn-new { width: 100%; padding: 14px; background: #185FA5; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .preview-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; border-bottom: .5px solid #e5e5ea; }
+    .preview-row:last-child { border-bottom: none; }
+    .row-num { font-size: 12px; color: #8e8e93; min-width: 24px; }
+    .del-btn { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 1px solid #ffb3b3; color: #c0392b; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: auto; flex-shrink: 0; }
+    .pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .pill-V { background: #B5D4F4; color: #042C53; }
+    .pill-O { background: #C0DD97; color: #173404; }
+    .pill-S { background: #F0997B; color: #4A1B0C; }
+    .arrow { font-size: 11px; color: #8e8e93; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+    .badge-ok { background: #C0DD97; color: #173404; }
+    .badge-warn { background: #ffe0b2; color: #854F0B; }
+    .badge-decon { background: #fffbe6; color: #7a6000; }
+    .result-obs { padding: 10px 0; border-bottom: .5px solid #e5e5ea; }
+    .result-obs:last-child { border-bottom: none; }
+    .result-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .result-num { width: 24px; height: 24px; border-radius: 50%; background: #f2f2f7; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+    .result-foulee { font-size: 18px; font-weight: 700; color: #1c1c1e; margin-top: 2px; }
+    .result-detail { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+    .connector { text-align: center; font-size: 12px; color: #c7c7cc; padding: 2px 0; }
+    .divider { height: .5px; background: #e5e5ea; margin: 12px 0; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .start-hero { text-align: center; padding: 48px 20px 32px; }
+    .start-icon { width: 80px; height: 80px; background: #185FA5; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .start-icon svg { width: 44px; height: 44px; fill: #fff; }
+    .start-hero h2 { font-size: 24px; font-weight: 700; color: #1c1c1e; margin-bottom: 8px; }
+    .start-hero p { font-size: 15px; color: #8e8e93; line-height: 1.5; margin-bottom: 32px; }
+    .source-tag { display: inline-block; font-size: 11px; background: #e5e5ea; color: #636366; padding: 3px 10px; border-radius: 20px; margin-bottom: 20px; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  </style>
+</head>
+<body>
+
+<!-- SCREEN START -->
+<div id="screen-start" class="screen active">
+  <div class="start-hero">
+    <div class="start-icon">
+      <svg viewBox="0 0 24 24"><path d="M5 3h2v18H5zm6 0h2v18h-2zm6 0h2v18h-2z"/></svg>
+    </div>
+    <h2>Parcours Obstacle</h2>
+    <p>Calculez le nombre de foulées entre chaque obstacle selon le référentiel FFE CSO.</p>
+    <span class="source-tag">Référentiel FFE CSO — Chevaux</span><br>
+    <button class="btn-new" onclick="startParcours()">+ Nouveau parcours</button>
+  </div>
+</div>
+
+<!-- SCREEN SAISIE -->
+<div id="screen-saisie" class="screen">
+  <div class="header">
+    <h1 id="obs-title">Obstacle n°1</h1>
+    <p id="parcours-name">Parcours 1</p>
+  </div>
+  <div class="content">
+    <div class="card">
+      <p class="section-lbl">Type de cet obstacle</p>
+      <div class="type-grid" id="cur-type-grid">
+        <button class="type-btn sel-V" data-type="V" onclick="selectType(this,'cur')">
+          <div class="icon-wrap"><div class="bar" style="height:22px"></div></div>Vertical
+        </button>
+        <button class="type-btn" data-type="O" onclick="selectType(this,'cur')">
+          <div class="icon-wrap"><div class="bar" style="height:22px"></div><div class="bar" style="height:22px"></div></div>Oxer
+        </button>
+        <button class="type-btn" data-type="S" onclick="selectType(this,'cur')">
+          <div class="icon-wrap"><div class="bar" style="height:22px"></div><div class="bar" style="height:22px"></div><div class="bar" style="height:22px"></div></div>Spa
+        </button>
+      </div>
+
+      <p class="section-lbl">Type de l'obstacle suivant</p>
+      <div class="type-grid" id="next-type-grid">
+        <button class="type-btn next-btn sel-V" data-type="V" onclick="selectType(this,'next')">
+          <div class="icon-wrap"><div class="bar" style="height:22px"></div></div>Vertical
+        </button>
+        <button class="type-btn next-btn" data-type="O" onclick="selectType(this,'next')">
+          <div class="icon-wrap"><div class="bar" style="height:22px"></div><div class="bar" style="height:22px"></div></div>Oxer
+        </button>
+        <button class="type-btn next-btn" data-type="S" onclick="selectType(this,'next')">
+          <div class="icon-wrap"><div class="bar" style="height:22px"></div><div class="bar" style="height:22px"></div><div class="bar" style="height:22px"></div></div>Spa
+        </button>
+      </div>
+
+      <div class="divider"></div>
+      <p class="section-lbl">Distance jusqu'à l'obstacle suivant</p>
+      <div class="unit-toggle">
+        <button class="unit-btn sel-u" id="btn-pas" onclick="setUnit('pas')">Pas</button>
+        <button class="unit-btn" id="btn-m" onclick="setUnit('m')">Mètres</button>
+      </div>
+      <div class="dist-row">
+        <label id="dist-label">Nombre de pas</label>
+        <div class="stepper">
+          <button onclick="stepVal(-1)">−</button>
+          <input type="number" id="dist-input" min="1" max="500" placeholder="0" inputmode="decimal" oninput="updateHint()">
+          <button onclick="stepVal(1)">+</button>
+        </div>
+      </div>
+      <div class="hint" id="dist-hint"></div>
+      <div id="pas-size-row" style="margin-top:10px;">
+        <p class="section-lbl" style="margin-bottom:4px;">Taille du pas</p>
+        <select id="pas-size" onchange="updateHint()">
+          <option value="90">90 cm — petit pas</option>
+          <option value="95" selected>95 cm — pas moyen</option>
+          <option value="100">100 cm — grand pas</option>
+        </select>
+      </div>
+      <div id="combo-alert" style="display:none;"></div>
+    </div>
+
+    <div id="live-result" style="display:none;" class="live-card">
+      <div class="live-label" id="live-label"></div>
+      <div class="live-main" id="live-main"></div>
+      <div class="live-detail" id="live-detail"></div>
+    </div>
+
+    <button class="btn-add" onclick="addObstacle()">Ajouter →</button>
+    <button class="btn-end" onclick="finParcours()">Fin de parcours</button>
+
+    <div id="parcours-preview" style="display:none; margin-top:16px;">
+      <div class="card">
+        <p class="section-lbl" style="margin-bottom:10px;">Parcours en cours</p>
+        <div id="preview-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN RESULT -->
+<div id="screen-result" class="screen">
+  <div class="header">
+    <h1>Récapitulatif</h1>
+    <p id="result-name"></p>
+  </div>
+  <div class="content">
+    <div class="card" id="result-table"></div>
+    <button class="btn-new" style="margin-top:4px;" onclick="startParcours()">+ Nouveau parcours</button>
+  </div>
+</div>
+
+<script>
+// ─── RÉFÉRENTIEL FFE CSO — CHEVAUX ───────────────────────────────────────────
+// Sources : tableau distances combinaisons (doc1) + tableau FFE CSO (doc2)
+// Statut : 'ok' = dans la norme | 'decon' = déconseillé | null = interdit
+//
+// Structure : COMBO[from][to][foulees] = [min, max] ou null (interdit) ou 'decon'
+
+const COMBO = {
+  V: {
+    V: { 1:[7.40,7.80], 2:[10.40,10.80], 3:[14.80,15.00], 4:[17.50,18.50], 5:[21.50,22.50], 6:[24.00,25.00] },
+    O: { 1:[7.30,7.60], 2:[10.40,10.60], 3:[14.60,14.70], 4:[17.40,18.00], 5:[21.00,22.00], 6:[24.50,25.00] },
+    S: { 1:null,        2:null,           3:null,          4:[18.00,18.00], 5:[21.00,21.00], 6:[25.00,25.00] }
+  },
+  O: {
+    V: { 1:[7.40,7.70], 2:[10.40,10.80], 3:[14.70,15.00], 4:[17.50,18.50], 5:[21.50,22.50], 6:[24.50,25.50] },
+    O: { 1:'decon',     2:'decon',        3:[14.40,14.60], 4:[17.40,18.00], 5:[21.00,21.50], 6:[24.00,25.00] },
+    S: { 1:null,        2:null,           3:null,          4:[18.00,18.00], 5:[21.00,21.00], 6:[25.00,25.00] }
+  },
+  S: {
+    V: { 1:null,        2:null,           3:[14.80,15.00], 4:[17.50,18.50], 5:[21.50,22.00], 6:[24.50,25.50] },
+    O: { 1:null,        2:null,           3:[14.60,14.80], 4:[17.50,18.00], 5:[21.00,21.50], 6:[24.00,25.00] },
+    S: { 1:null,        2:null,           3:null,          4:null,          5:null,          6:null           }
+  }
+};
+
+let parcours=[], currentType='V', nextType='V', currentUnit='pas', parcoursCount=0;
+
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+function pill(t){ const n={V:'Vertical',O:'Oxer',S:'Spa'}; return `<span class="pill pill-${t}">${n[t]}</span>`; }
+function typeName(t){ return t==='V'?'Vertical':t==='O'?'Oxer':'Spa'; }
+
+function comboStatus(from, to){
+  const table = COMBO[from][to];
+  const vals = Object.values(table);
+  if(vals.every(v => v===null)) return 'interdit';
+  if(vals.some(v => v==='decon') && vals.every(v => v===null || v==='decon')) return 'decon_only';
+  return 'ok';
+}
+
+function setGridActive(isNext, t){
+  const sel = isNext ? '#next-type-grid .type-btn' : '#cur-type-grid .type-btn';
+  document.querySelectorAll(sel).forEach(b=>{
+    b.className = 'type-btn'+(isNext?' next-btn':'');
+    if(b.dataset.type===t) b.classList.add('sel-'+t);
+  });
+}
+
+function startParcours(){
+  parcours=[]; parcoursCount++; currentType='V'; nextType='V'; currentUnit='pas';
+  setGridActive(false,'V'); setGridActive(true,'V');
+  document.getElementById('dist-input').value='';
+  document.getElementById('dist-hint').textContent='';
+  document.getElementById('live-result').style.display='none';
+  document.getElementById('parcours-preview').style.display='none';
+  document.getElementById('btn-pas').className='unit-btn sel-u';
+  document.getElementById('btn-m').className='unit-btn';
+  document.getElementById('pas-size-row').style.display='block';
+  document.getElementById('dist-label').textContent='Nombre de pas';
+  document.getElementById('combo-alert').style.display='none';
+  document.getElementById('parcours-name').textContent='Parcours '+parcoursCount;
+  updateObsTitle();
+  showScreen('screen-saisie');
+}
+
+function selectType(btn, which){
+  const t = btn.dataset.type;
+  if(which==='cur'){ setGridActive(false,t); currentType=t; }
+  else { setGridActive(true,t); nextType=t; }
+  checkCombo(); updateHint();
+}
+
+function checkCombo(){
+  const alertEl = document.getElementById('combo-alert');
+  const status = comboStatus(currentType, nextType);
+  if(status==='interdit'){
+    alertEl.style.display='block';
+    alertEl.className='alert alert-err';
+    alertEl.textContent='⛔ Combinaison interdite — '+typeName(currentType)+' → '+typeName(nextType)+' n\'est pas autorisé.';
+    document.getElementById('live-result').style.display='none';
+  } else if(status==='decon_only'){
+    alertEl.style.display='block';
+    alertEl.className='alert alert-warn';
+    alertEl.textContent='⚠️ Combinaison déconseillée par la FFE ('+typeName(currentType)+' → '+typeName(nextType)+').';
+  } else {
+    alertEl.style.display='none';
+  }
+}
+
+function setUnit(u){
+  currentUnit=u;
+  document.getElementById('btn-pas').className='unit-btn'+(u==='pas'?' sel-u':'');
+  document.getElementById('btn-m').className='unit-btn'+(u==='m'?' sel-u':'');
+  document.getElementById('pas-size-row').style.display=u==='pas'?'block':'none';
+  document.getElementById('dist-label').textContent=u==='pas'?'Nombre de pas':'Distance (m)';
+  document.getElementById('dist-input').value='';
+  document.getElementById('dist-hint').textContent='';
+  document.getElementById('live-result').style.display='none';
+}
+
+function stepVal(delta){
+  const inp = document.getElementById('dist-input');
+  const step = currentUnit==='m' ? 0.5 : 1;
+  const cur = parseFloat(inp.value)||0;
+  const nv = Math.max(0, +(cur+delta*step).toFixed(2));
+  inp.value = nv||''; updateHint();
+}
+
+function updateObsTitle(){ document.getElementById('obs-title').textContent='Obstacle n°'+(parcours.length+1); }
+
+function getDist(){
+  const val = parseFloat(document.getElementById('dist-input').value);
+  if(!val||val<=0) return null;
+  if(currentUnit==='m') return val;
+  return val*(parseInt(document.getElementById('pas-size').value)/100);
+}
+
+function getFouleeResult(dist, from, to){
+  if(!dist) return null;
+  const table = COMBO[from][to];
+  // cherche correspondance exacte (non déconseillé)
+  for(let n=1;n<=6;n++){
+    const r=table[n];
+    if(!r||r==='decon') continue;
+    if(dist>=r[0]-.25&&dist<=r[1]+.25) return {n,status:'ok',min:r[0],max:r[1],decon:false};
+  }
+  // cherche dans les déconseillés
+  for(let n=1;n<=6;n++){
+    const r=table[n];
+    if(r!=='decon') continue;
+    // pour oxer/oxer 1-2 foulées : plages estimées selon doc FFE
+    const est={1:[7.40,7.70],2:[10.40,10.80]};
+    const range=est[n];
+    if(range&&dist>=range[0]-.25&&dist<=range[1]+.25) return {n,status:'ok',min:range[0],max:range[1],decon:true};
+  }
+  // trouve le plus proche
+  let best=null, bestDiff=Infinity;
+  for(let n=1;n<=6;n++){
+    const r=table[n]; if(!r) continue;
+    const range = r==='decon' ? (n===1?[7.40,7.70]:n===2?[10.40,10.80]:null) : r;
+    if(!range) continue;
+    const mid=(range[0]+range[1])/2, diff=Math.abs(dist-mid);
+    if(diff<bestDiff){ bestDiff=diff; best={n,status:dist<range[0]?'short':'long',min:range[0],max:range[1],decon:r==='decon'}; }
+  }
+  return best;
+}
+
+function updateHint(){
+  const dist=getDist(); const inp=document.getElementById('dist-input').value;
+  const hintEl=document.getElementById('dist-hint');
+  if(!inp){ hintEl.textContent=''; document.getElementById('live-result').style.display='none'; return; }
+  if(currentUnit==='pas'){ const ps=parseInt(document.getElementById('pas-size').value)/100; hintEl.textContent='≈ '+(parseFloat(inp)*ps).toFixed(2)+' m'; }
+  else hintEl.textContent='';
+  const status=comboStatus(currentType,nextType);
+  if(status==='interdit'||!dist) return;
+  const r=getFouleeResult(dist,currentType,nextType); if(!r) return;
+  const liveDiv=document.getElementById('live-result');
+  liveDiv.style.display='block';
+  document.getElementById('live-label').textContent=typeName(currentType)+' → '+typeName(nextType);
+  if(r.status==='ok'){
+    document.getElementById('live-main').textContent=r.n+' foulée'+(r.n>1?'s':'')+(r.decon?' ⚠️':'');
+    document.getElementById('live-detail').textContent=(r.decon?'Déconseillé FFE — ':'')+' Dans la norme ('+r.min.toFixed(2)+' – '+r.max.toFixed(2)+' m)';
+  } else {
+    const dir=r.status==='short'?'en dessous':'au-dessus'; const limit=r.status==='short'?r.min:r.max;
+    document.getElementById('live-main').textContent=dist.toFixed(2)+' m';
+    document.getElementById('live-detail').textContent='Réf. '+r.n+' foulée'+(r.n>1?'s':'')+' ('+r.min.toFixed(2)+'–'+r.max.toFixed(2)+' m) — '+Math.abs(dist-limit).toFixed(2)+' m '+dir;
+  }
+}
+
+function addObstacle(){
+  const dist=getDist();
+  if(!document.getElementById('dist-input').value){ alert('Veuillez saisir une distance.'); return; }
+  const status=comboStatus(currentType,nextType);
+  if(status==='interdit'){ alert('Combinaison interdite — impossible d\'ajouter.'); return; }
+  const r=getFouleeResult(dist,currentType,nextType);
+  parcours.push({type:currentType,nextType,dist,foulee:r,decon:status==='decon_only'});
+  document.getElementById('dist-input').value='';
+  document.getElementById('dist-hint').textContent='';
+  document.getElementById('live-result').style.display='none';
+  document.getElementById('combo-alert').style.display='none';
+  const savedNext=nextType;
+  currentType=savedNext; setGridActive(false,savedNext);
+  nextType='V'; setGridActive(true,'V');
+  updateObsTitle(); renderPreview();
+}
+
+function deleteObstacle(i){
+  parcours.splice(i,1);
+  currentType=parcours.length?parcours[parcours.length-1].nextType:'V';
+  setGridActive(false,currentType);
+  updateObsTitle();
+  document.getElementById('parcours-preview').style.display=parcours.length?'block':'none';
+  if(parcours.length) renderPreview();
+}
+
+function renderPreview(){
+  document.getElementById('parcours-preview').style.display='block';
+  document.getElementById('preview-list').innerHTML=parcours.map((o,i)=>{
+    const f=o.foulee;
+    let fHtml='';
+    if(f&&f.status==='ok') fHtml=f.n+' foulée'+(f.n>1?'s':'')+(f.decon?' <span class="badge badge-decon">⚠️ décon.</span>':' <span class="badge badge-ok">OK</span>');
+    else if(f) fHtml=o.dist.toFixed(2)+' m <span class="badge badge-warn">hors norme</span>';
+    return `<div class="preview-row">
+      <span class="row-num">n°${i+1}</span>
+      ${pill(o.type)}<span class="arrow">→</span>${pill(o.nextType)}
+      <span style="font-size:12px;color:#8e8e93;flex:1;text-align:right;">${fHtml}</span>
+      <button class="del-btn" onclick="deleteObstacle(${i})">✕</button>
+    </div>`;
+  }).join('')+`<div style="padding:8px 0;font-size:12px;color:#c7c7cc;text-align:center;">— obstacle n°${parcours.length+1} à venir —</div>`;
+}
+
+function finParcours(){
+  if(!parcours.length){ alert('Ajoutez au moins un obstacle.'); return; }
+  document.getElementById('result-name').textContent='Parcours '+parcoursCount+' — '+parcours.length+' ligne'+(parcours.length>1?'s':'');
+  renderResult(); showScreen('screen-result');
+}
+
+function renderResult(){
+  const container=document.getElementById('result-table');
+  let html='';
+  parcours.forEach((o,i)=>{
+    const f=o.foulee; let fH='',dH='';
+    const cl=typeName(o.type)+' → '+typeName(o.nextType);
+    if(f&&f.status==='ok'){
+      const deconTag=f.decon?' <span class="badge badge-decon">⚠️ déconseillé</span>':' <span class="badge badge-ok">OK</span>';
+      fH=`<div class="result-foulee">${f.n} foulée${f.n>1?'s':''}${deconTag}</div>`;
+      dH=cl+' — '+o.dist.toFixed(2)+' m ('+f.min.toFixed(2)+'–'+f.max.toFixed(2)+' m)';
+    } else if(f){
+      const dir=f.status==='short'?'trop court':'trop long';
+      fH=`<div class="result-foulee">${o.dist.toFixed(2)} m <span class="badge badge-warn">Hors norme</span></div>`;
+      dH=cl+' — réf. '+f.n+' foulée'+(f.n>1?'s':'')+' ('+f.min.toFixed(2)+'–'+f.max.toFixed(2)+' m) '+dir;
+    }
+    html+=`<div class="result-obs">
+      <div class="result-header"><div class="result-num">${i+1}</div>${pill(o.type)}<span class="arrow">→</span>${pill(o.nextType)}</div>
+      ${fH}<div class="result-detail">${dH}</div>
+    </div>`;
+    if(i<parcours.length-1) html+='<div class="connector">↓</div>';
+  });
+  html+=`<div style="text-align:center;padding:12px 0 4px;font-size:12px;color:#c7c7cc;">Arrivée — ${parcours.length} ligne${parcours.length>1?'s':''}</div>`;
+  container.innerHTML=html;
+}
+
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js')); }
+</script>
+</body>
+</html>
