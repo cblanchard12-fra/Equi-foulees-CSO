@@ -1,0 +1,24 @@
+{
+  "name": "Parcours Obstacle",
+  "short_name": "Foulées",
+  "description": "Calculateur de foulées pour le saut d'obstacle — référentiel FFE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f2f7",
+  "theme_color": "#185FA5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
